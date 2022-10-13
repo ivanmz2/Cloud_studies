@@ -1,0 +1,9 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - aws s3 sync . $BUCKET_NAME --exclude ".git/*"
+  post_build:
+    commands:
+      - echo Success!

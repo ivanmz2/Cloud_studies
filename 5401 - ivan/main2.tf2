@@ -1,0 +1,85 @@
+terraform {
+  required_providers {
+    aws = {
+      version = ">= 4.0.0"
+      source  = "hashicorp/aws"
+    }
+  }
+}
+
+provider "aws" {
+  region = "ca-central-1"
+}
+
+resource "aws_instance" "example" {
+  count                  = 1 # number of instances
+  ami                    = "ami-0b6937ac543fe96d7"
+  instance_type          = "t2.micro"
+  key_name               = aws_key_pair.key_pair.key_name
+  vpc_security_group_ids = [aws_security_group.allow_ssh_http.id]
+
+  user_data = <<-EOF
+                #!/bin/bash
+                apt install nginx -y
+                systemctl start nginx
+                systemctl enable nginx
+                echo "<br/>Ivan Melo" | sudo tee -a /var/www/html/index.html
+                EOF
+
+  tags = {
+    Name = "bvc-${count.index + 1}"
+  }
+}
+
+# echo $(curl http://169.254.169.254/latest/meta-data/public-ipv4) | sudo tee /var/www/html/index.html
+
+resource "tls_private_key" "key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+
+  provisioner "local-exec" {
+    interpreter = ["bash", "-c"]
+    command     = "echo '${self.private_key_pem}' > ${pathexpand("~/Downloads/canada.pem")}"
+  }
+}
+
+resource "aws_key_pair" "key_pair" {
+  public_key = tls_private_key.key.public_key_openssh
+}
+
+data "aws_vpc" "default" {
+  default = true
+}
+
+resource "aws_security_group" "allow_ssh_http" {
+  name        = "allow_ssh_http"
+  description = "Allows SSH and HTTP"
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allows HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "allow_ssh"
+  }
+}
