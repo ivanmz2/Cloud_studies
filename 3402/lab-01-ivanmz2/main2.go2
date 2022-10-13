@@ -1,0 +1,32 @@
+package main
+
+import (
+	"bytes"
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+)
+
+func main() {
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile("ivan"))
+	if err != nil {
+		panic(err)
+	}
+
+	bucketName, key := "<bucket-1", "test_go.txt"
+	text := "This is a test from Go"
+
+	s3Client := s3.NewFromConfig(cfg)
+
+	_, err = s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+		Body:   bytes.NewBufferString(text),
+	})
+
+	if err != nil {
+		panic(err)
+	}
+}

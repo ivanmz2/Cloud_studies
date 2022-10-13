@@ -1,0 +1,39 @@
+package main
+
+import "fmt"
+
+func main() {
+	var name string = "Ivan"
+	var age int = 39
+
+	name2 := "Melo"
+	Age2 := 40
+
+	fmt.Println(name2, ", :", Age2)
+	fmt.Println(name, ", :", age)
+
+	fmt.Println(" ")
+	fmt.Println(name)
+	fmt.Println(&name)
+	fmt.Println("Above are the content of the variable name and right below is the memory address for the variable name(pointer)")
+
+	fmt.Println(" ")
+	fmt.Println(Numbers(1, 2))
+
+	fmt.Println(" ")
+	number1, number2 := 10, 5
+
+	doubleNumbers(&number1, &number2)
+
+	fmt.Printf("number1 is %d and number2 is %d\n", number1, number2)
+
+}
+
+func Numbers(a, b int) (int, int) {
+	return a, b
+}
+
+func doubleNumbers(a *int, b *int) {
+	*a = *a * 2
+	*b = *b * 2
+}
